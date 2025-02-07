@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plot Search</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        h2 {
+            color: #333;
+        }
+        select {
+            padding: 8px;
+            margin: 10px 0;
+        }
+        /* Flexbox布局 */
+        .header-controls {
+            display: flex;
+            align-items: center; /* 垂直居中对齐 */
+            gap: 20px; /* 控件之间的间距 */
+            margin-bottom: 20px;
+        }
+        /* 按钮样式 */
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        // 在页面加载时从localStorage获取语言设置
+        function setLanguage() {
+            const lang = localStorage.getItem("language") || "en";
+            document.documentElement.lang = lang;  // 设置页面的语言属性
+            document.getElementById("language-selector").value = lang; // 设置选择框的值
+            translatePage(lang);
+        }
+
+        // 根据选择的语言翻译页面内容
+        function translatePage(language) {
+            const translations = {
+                "en": {
+                    "plot_data_search": "Plot Data",
+                    "select_pl": "Select PL:",
+                    "land_id": "Plot ID",
+                    "planet": "Planet",
+                    "x_coordinate": "X",
+                    "y_coordinate": "Y",
+                    "required_pl_level": "Power Level",
+                    "rent": "Rent",
+                    "remaining_times": "Left Digs",
+                    "no_results": "No results found for PL =",
+                    "material_price_query": "Resource Price"
+                },
+                "zh": {
+                    "plot_data_search": "土地数据",
+                    "select_pl": "选择PL：",
+                    "land_id": "土地编号",
+                    "planet": "星球",
+                    "x_coordinate": "横坐标X",
+                    "y_coordinate": "纵坐标Y",
+                    "required_pl_level": "PL",
+                    "rent": "租金",
+                    "remaining_times": "剩余挖掘次数",
+                    "no_results": "没有找到PL =",
+                    "material_price_query": "资源价格"
+                }
+            };
+
+            const t = translations[language];
+
+            // 更新页面上的文本
+
+            document.getElementById("plot-data-search").innerText = t.plot_data_search;
+            document.getElementById("select-pl-label").innerText = t.select_pl;
+            document.getElementById("results-for-pl").innerText = `Results for PL = ${document.getElementById("pl").value}`;
+
+            // 表格头部的翻译
+            document.getElementById("land-id-header").innerText = t.land_id;
+            document.getElementById("planet-header").innerText = t.planet;
+            document.getElementById("x-coordinate-header").innerText = t.x_coordinate;
+            document.getElementById("y-coordinate-header").innerText = t.y_coordinate;
+            document.getElementById("required-pl-level-header").innerText = t.required_pl_level;
+            document.getElementById("rent-header").innerText = t.rent;
+            document.getElementById("remaining-times-header").innerText = t.remaining_times;
+
+            // 结果为空时的提示
+            const noResultsMessage = t.no_results + " " + document.getElementById("pl").value + ".";
+            document.getElementById("no-results-message").innerText = noResultsMessage;
+
+            // 更新“材料价格查询”按钮的文本
+            document.getElementById("material-price-query-button").innerText = t.material_price_query;
+        }
+
+        // 监听语言选择变化
+        function changeLanguage() {
+            const lang = document.getElementById("language-selector").value;
+            localStorage.setItem("language", lang);
+            setLanguage();
+        }
+    </script>
+</head>
+<body onload="setLanguage()">
+    <!-- Header controls in a flex container -->
+    <div class="header-controls">
+        <!-- Language Selector -->
+        <label for="language-selector">Language: </label>
+        <select id="language-selector" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+        </select>
+
+        <!-- PL Selector Form -->
+        <form method="get">
+            <label id="select-pl-label" for="pl">Select PL: </label>
+            <select name="pl" id="pl" onchange="this.form.submit()">
+                <option value="1" {% if selected_pl == '1' %}selected{% endif %}>PL=1</option>
+                <option value="3" {% if selected_pl == '3' %}selected{% endif %}>PL=3</option>
+                <option value="7" {% if selected_pl == '7' %}selected{% endif %}>PL=7</option>
+                <option value="12" {% if selected_pl == '12' %}selected{% endif %}>PL=12</option>
+                <option value="15" {% if selected_pl == '15' %}selected{% endif %}>PL=15</option>
+            </select>
+        </form>
+
+        <!-- Material Price Query Button -->
+        <form action="/prices">
+            <button id="material-price-query-button" type="submit">Resource Price</button>
+        </form>
+    </div>
+
+    <h1 id="plot-data-search">土地数据查询</h1>
+
+    <!-- Display Search Results -->
+    <h2 id="results-for-pl">Results for PL = {{ selected_pl }}</h2>
+    <table>
+        <thead>
+            <tr>
+                <th id="land-id-header">土地编号</th>
+                <th id="planet-header">星球</th>
+                <th id="x-coordinate-header">横坐标X</th>
+                <th id="y-coordinate-header">纵坐标Y</th>
+                <th id="required-pl-level-header">所需能量等级</th>
+                <th id="rent-header">租金</th>
+                <th id="remaining-times-header">剩余挖掘次数</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if data %}
+                {% for row in data %}
+                    <tr>
+                        <td>{{ row[0] }}</td>
+                        <td>{{ row[1] }}</td>
+                        <td>{{ row[2] }}</td>
+                        <td>{{ row[3] }}</td>
+                        <td>{{ row[4] }}</td>
+                        <td>{{ row[5] }}</td>
+                        <td>{{ row[6] }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="7" id="no-results-message">No results found for PL = {{ selected_pl }}.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</body>
+</html>

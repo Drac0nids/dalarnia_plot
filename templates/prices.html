@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资源价格查询</title>
+    <style>
+        table {
+            width: 50%;
+            border-collapse: collapse;
+            margin: 50px auto;
+        }
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        /* Flexbox布局 */
+        .header-controls {
+            display: flex;
+            align-items: center; /* 垂直居中对齐 */
+            gap: 20px; /* 控件之间的间距 */
+            margin: 20px auto;
+            justify-content: center; /* 居中排列 */
+        }
+        select {
+            padding: 8px;
+            margin: 10px 0;
+        }
+        /* 按钮样式 */
+        .back-button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .back-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script>
+        // 页面加载时获取语言设置并应用
+        function setLanguage() {
+            const lang = localStorage.getItem("language") || "en";
+            document.documentElement.lang = lang;  // 设置页面语言属性
+            document.getElementById("language-selector").value = lang;  // 设置语言选择框
+            translatePage(lang);  // 翻译页面内容
+        }
+
+        // 根据语言选择翻译页面内容
+        function translatePage(language) {
+            const translations = {
+                "en": {
+                    "resource_price_query": "Resource Price Query",
+                    "back_to_plot_data": "Back to Plot Data",
+                    "resource": "Resource",
+                    "price": "Price"
+                },
+                "zh": {
+                    "resource_price_query": "资源价格查询",
+                    "back_to_plot_data": "返回土地数据查询",
+                    "resource": "资源",
+                    "price": "价格"
+                }
+            };
+
+            const t = translations[language];
+
+            // 更新页面文本
+            document.getElementById("resource-price-query-title").innerText = t.resource_price_query;
+            document.getElementById("back-to-plot-data-button").innerText = t.back_to_plot_data;
+
+            // 更新表格头部
+            document.getElementById("resource-header").innerText = t.resource;
+            document.getElementById("price-header").innerText = t.price;
+        }
+
+        // 监听语言选择变化
+        function changeLanguage() {
+            const lang = document.getElementById("language-selector").value;
+            localStorage.setItem("language", lang);
+            setLanguage();
+        }
+    </script>
+</head>
+<body onload="setLanguage()">
+    <!-- Header controls in a flex container -->
+    <div class="header-controls">
+        <!-- Language Selector -->
+        <label for="language-selector">Language: </label>
+        <select id="language-selector" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+        </select>
+
+        <!-- 返回按钮 -->
+        <form action="/" method="get">
+            <button class="back-button" id="back-to-plot-data-button" type="submit">返回土地数据查询</button>
+        </form>
+    </div>
+
+    <h1 style="text-align: center;" id="resource-price-query-title">资源价格查询</h1>
+
+    <!-- 价格表格 -->
+    <table>
+        <thead>
+            <tr>
+                <th id="resource-header">资源</th>
+                <th id="price-header">价格</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item, price in prices.items() %}
+            <tr>
+                <td>{{ item }}</td>
+                <td>{{ price }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
